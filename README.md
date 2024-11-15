@@ -13,7 +13,7 @@ In present time, the project supports the following commands:
  - `history` - show user input history
  - `verbose` - set the verbose variable
  - `exec` - run command from history *- not implemented yet*
- - `defrag` - for defragmenting the HDD - *Usage:* defrag <rows> <columns> 
+ - `defrag` - for defragmenting the HDD - *Usage:* defrag {rows} {columns}
  
 **Compilation**  
 Run `make` in the project's root directory
