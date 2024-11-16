@@ -26,6 +26,12 @@ void FileSystem::defragmenting(FileSystem &fs_src, int rows, int cols)
 	defragObj.defragmentation(rows, cols);
 }
 
+
+void FileSystem::slidingdefragmenting(FileSystem &fs_src )
+{	
+	defragObj.slidingDefragmentation();
+}
+
 void FileSystem::setWorkingDirectory(Directory* newWorkingDirectory)
 {
 	this->workingDirectory = newWorkingDirectory;

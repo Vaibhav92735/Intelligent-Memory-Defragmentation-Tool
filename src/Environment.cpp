@@ -269,6 +269,13 @@ void Environment::handleInput(const string &input)
 		defrag_command.execute(this->fs);
 		this->addToHistory(new DefragCommand(defrag_command));
 	}
+	case CommandType::slidingfragCommandType:
+	{
+		slidingfragCommand rename_command(first_word, args);
+		rename_command.execute(this->fs);
+		this->addToHistory(new slidingfragCommand(rename_command));
+	}
+	break;
 	case CommandType::UnknownCommandType:
 	default:
 		ErrorCommand error_command(first_word, args);

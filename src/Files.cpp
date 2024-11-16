@@ -2,11 +2,19 @@
 #include "../include/Config.h"
 #include <algorithm>
 #include <iostream>
+#include <pthread.h> 
 #include "../include/GlobalVariables.h"
+#include <thread>
+#include <chrono>
+#include <mutex>
+
+std::mutex globalLock;
+using namespace chrono;
 
 // global variables
 std::map<std::pair<int, int>, std::pair<int, File *>> BTF;
 std::map<std::pair<int, int>, std::pair<int, std::string>> BT;
+std::queue<std::pair<File*, std::vector<std::pair<std::pair<int, int>, int>>>> overflowQueue;
 int BS;
 int rows, cols;
 int rowFrag, colFrag;
@@ -226,7 +234,7 @@ void Directory::removeBlocks(BaseFile *file)
 
 void DefragClass::PrintHDD()
 {
-
+    printf("In use");
 	for (int i = 0; i < rows; i++)
 	{
 		if (i % rowFrag == 0)
@@ -329,6 +337,67 @@ void DefragClass::defragmentation(int r, int c)
 	cout << "...............virtul HDD view...............\n";
 	PrintHDD();
 }
+
+void DefragClass::slidingDefragmentation()
+{
+	auto start = high_resolution_clock::now();
+    int currRow = 0, currCol = 0; // Starting position for compact placement
+
+    // Traverse the grid to compact blocks
+    for (int row = 0; row < rows; row++)
+    {
+        for (int col = 0; col < cols; col++)
+        {
+            auto &block = BTF[{row, col}];
+            File *f = block.second;
+            if (f != NULL) // Check if the current block is in use
+            {
+                int blockValue = block.first;
+
+                // If it's not at the current compacted position, move it
+                if (row != currRow || col != currCol)
+                {
+                    f->blocks.push_back({currRow, currCol}); // Add the new block to the file's block list
+                    BTF[{currRow, currCol}] = {blockValue, f}; // Update the block table with the new position
+                    BT[{currRow, currCol}] = {blockValue, f->getName()}; // Update the block name table
+
+                    // Mark the old position as free
+                    BTF[{row, col}] = {-1, NULL};
+                    BT[{row, col}] = {-1, "NULL"};
+                }
+
+                // Move to the next column in the current row
+                currCol++;
+
+                // If we've reached the end of the row, move to the next row and reset the column
+                if (currCol >= cols)
+                {
+                    currCol = 0;
+                    currRow++;
+                }
+            }
+        }
+    }
+
+    // Mark all remaining blocks as free after compacting in-use blocks
+    for (int row = currRow; row < rows; row++)
+    {
+        for (int col = (row == currRow ? currCol : 0); col < cols; col++)
+        {
+            BTF[{row, col}] = {-1, NULL};
+            BT[{row, col}] = {-1, "NULL"};
+        }
+    }
+    auto end = high_resolution_clock::now();
+    
+    // Calculate duration
+    auto duration = duration_cast<nanoseconds>(end - start);
+    cout << "Defragmentation completed in " << duration.count() << " nanoseconds.\n";
+
+    cout << "Defragmentation completed using 1x(cols) sliding window.\n";
+    PrintHDD(); // Optionally, print the final disk state
+}
+
 
 void Directory::recursivedel(BaseFile *file)
 {

@@ -34,9 +34,9 @@ public:
 };
 
 class DefragClass {
-	
 public:
 	void PrintHDD();
+	void slidingDefragmentation();
 	void defragmentation(int r, int c);
 	void fullDefragmentation(int i, int j);
 };

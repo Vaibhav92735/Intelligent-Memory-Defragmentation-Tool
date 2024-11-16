@@ -30,6 +30,7 @@ public:
 	void duplicate(const FileSystem &fs_src);
 	void steal(FileSystem &fs_src);
 	void defragmenting(FileSystem &fs_src, int rows, int cols);
+	void slidingdefragmenting(FileSystem &fs_src);
 	void clean_up();
 };
 

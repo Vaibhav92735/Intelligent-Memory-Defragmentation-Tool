@@ -4,6 +4,7 @@
 #include "../include/GlobalVariables.h"
 #include "../include/Environment.h"
 
+
 BaseCommand::BaseCommand(std::string args) : command_name(), args(args) {}
 
 BaseCommand::BaseCommand(std::string command_name, std::string args) : command_name(command_name), args(args) { }
@@ -566,6 +567,35 @@ std::string DefragCommand::toString()
 
 DefragCommand::DefragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
 
+slidingfragCommand::slidingfragCommand(std::string args) : BaseCommand( args) {}
+
+
+void slidingfragCommand::execute(FileSystem &fs)
+{
+    try
+    {
+        vector<std::string> tokens = StringTools::split(this->getArgs(), " ");
+
+        if(tokens.size()!=1)
+		{
+			std::cerr << "Invalid No of Args.... \n";
+			return;
+		}
+        fs.slidingdefragmenting(fs);
+    }
+    catch (const std::exception &e)
+    {
+        std::cout << "Error: Invalid command or arguments. " << e.what() << std::endl;
+    }
+}
+
+std::string slidingfragCommand::toString()
+{
+    return this->getCommandName() + " " + this->getArgs();
+}
+
+slidingfragCommand::slidingfragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+
 CommandType CommandTools::stringToCommand(const std::string& input)
 {
 	if (input == "")
@@ -596,5 +626,8 @@ CommandType CommandTools::stringToCommand(const std::string& input)
 		return CommandType::ExecCommandType;
 	if (input == "defrag")
 		return CommandType::DefragCommandType;
+	if (input == "sfrag")
+	    return CommandType::slidingfragCommandType;
+
 	return CommandType::UnknownCommandType;
 }

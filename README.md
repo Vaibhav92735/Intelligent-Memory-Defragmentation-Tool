@@ -14,6 +14,7 @@ In present time, the project supports the following commands:
  - `verbose` - set the verbose variable
  - `exec` - run command from history *- not implemented yet*
  - `defrag` - for defragmenting the HDD - *Usage:* defrag {rows} {columns}
+ - `sfrag` - for defragmenting the HDD by using sliding window algorithm - *Usage:* sfrag
  
 **Compilation**  
 Run `make` in the project's root directory
