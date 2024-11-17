@@ -24,12 +24,15 @@ public:
 class File : public BaseFile {
 private:
 	int size;
+	int internalFrag;
 	
 public:
 
 	std::vector<std::pair<int , int>> blocks; 
 	File(std::string name, int size); // Constructor
 	int getSize(); // Return the size of the file
+	int getInternalFrag();
+	void updateInternalFrag();
 	
 };
 
@@ -39,6 +42,15 @@ public:
 	void slidingDefragmentation();
 	void defragmentation(int r, int c);
 	void fullDefragmentation(int i, int j);
+
+	void evaluateFragmentation();
+	int calcInternalFrag();
+
+	// helper functions for analysis
+	int calculateDistance(pair<int, int> a, pair<int, int> b);
+	int calculateFragSize(const vector<pair<int, int>> &blocks);
+	int calculateFragDistance(const vector<pair<int, int>> &blocks);
+	// helper functions for analysis ends
 };
 
 class Directory : public BaseFile {

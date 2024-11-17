@@ -50,6 +50,14 @@ int File::getSize()
 	return this->size;
 }
 
+int File::getInternalFrag(){
+	return this->internalFrag;
+}
+
+void File::updateInternalFrag(){
+	this->internalFrag = (blocks.size() * BS) - this->size;
+}
+
 // </File>
 
 // <Directory>
@@ -311,6 +319,11 @@ void DefragClass::fullDefragmentation(int i, int j)
 
 void DefragClass::defragmentation(int r, int c)
 {
+	cout << "...............virtul HDD view...............\n";
+	PrintHDD();
+
+	cout<< ".......................Before Defragmentation......................"<<endl;
+	evaluateFragmentation();
 	if (r != -1)
 	{
 		rowFrag = r;
@@ -334,8 +347,96 @@ void DefragClass::defragmentation(int r, int c)
 		}
 	}
 
+	cout<< ".......................After Defragmentation......................"<<endl;
+	evaluateFragmentation();
+
+	int totalInternalFrag = calcInternalFrag();
+	cout<< "Total Internal Fragmentation is (in Bytes): "<< totalInternalFrag<<endl;
+
 	cout << "...............virtul HDD view...............\n";
 	PrintHDD();
+}
+
+int DefragClass::calcInternalFrag(){
+
+	int totalIntFrag = 0;
+	set<File*> visited;
+
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			File* currFile = BTF[{i,j}].second;
+			if(currFile == nullptr) continue;
+			if(visited.find(currFile) != visited.end()) continue;
+
+			//update totalFrag and visited
+			currFile->updateInternalFrag();
+			totalIntFrag += currFile->getInternalFrag();
+			visited.insert(currFile);
+		}
+	}
+
+	return totalIntFrag;
+}
+
+// Function to calculate Manhattan distance
+int DefragClass::calculateDistance(pair<int, int> a, pair<int, int> b) {
+    return abs(a.first - b.first) + abs(a.second - b.second);
+}
+
+// Function to compute frag size
+int DefragClass::calculateFragSize(const vector<pair<int, int>> &blocks) {
+    int fragSize = 1; // At least one contiguous segment
+    for (size_t i = 1; i < blocks.size(); i++) {
+        // Check if blocks are adjacent (row-major order)
+        if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1) {
+            fragSize++;
+        }
+    }
+    return (blocks.size()/fragSize)*BS;
+}
+
+// Function to compute frag distance
+int DefragClass::calculateFragDistance(const vector<pair<int, int>> &blocks) {
+    int fragDistance = 0;
+	int fragSize = 1;
+    for (size_t i = 1; i < blocks.size(); i++) {
+		if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1) {
+			fragSize++;
+            fragDistance += calculateDistance(blocks[i - 1], blocks[i]);
+        }
+    }
+    return fragDistance*BS/fragSize;
+}
+
+// Main function to evaluate fragmentation metrics
+void DefragClass::evaluateFragmentation() {
+    cout << "File Name | Frag Size | Frag Distance\n";
+    cout << "-----------------------------------\n";
+
+	set<File*> visited;
+
+	for(int i = 0; i < rows; i++){
+		for(int j = 0; j < cols; j++){
+			File* currFile = BTF[{i,j}].second;
+			if(currFile == nullptr) continue;
+			if(visited.find(currFile) != visited.end()) continue;
+
+			//impelement the analysis metrics
+			string fileName = currFile->getName();
+			auto blocks = currFile->blocks;
+
+			//// Calculate frag size and frag distance
+			int fragSize = calculateFragSize(blocks);
+			int fragDistance = calculateFragDistance(blocks);
+
+			// Display results
+			cout << fileName << "       | " << fragSize << "         | " << fragDistance << "\n";
+
+			visited.insert(currFile);
+		}
+	}
+
+    cout << "-----------------------------------\n";
 }
 
 void DefragClass::slidingDefragmentation()
@@ -393,6 +494,12 @@ void DefragClass::slidingDefragmentation()
     // Calculate duration
     auto duration = duration_cast<nanoseconds>(end - start);
     cout << "Defragmentation completed in " << duration.count() << " nanoseconds.\n";
+
+	cout<< ".......................After Defragmentation......................"<<endl;
+	evaluateFragmentation();
+
+	int totalInternalFrag = calcInternalFrag();
+	cout<< "Total Internal Fragmentation is (in Bytes): "<< totalInternalFrag<<endl;
 
     cout << "Defragmentation completed using 1x(cols) sliding window.\n";
     PrintHDD(); // Optionally, print the final disk state
