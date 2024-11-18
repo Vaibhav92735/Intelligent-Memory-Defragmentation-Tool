@@ -44,6 +44,7 @@ public:
 	void fullDefragmentation(int i, int j);
 
 	void evaluateFragmentation();
+	// void updateAllInternalFrag();
 	int calcInternalFrag();
 
 	// helper functions for analysis

@@ -55,7 +55,7 @@ int File::getInternalFrag(){
 }
 
 void File::updateInternalFrag(){
-	this->internalFrag = (blocks.size() * BS) - this->size;
+	this->internalFrag = BS-(this->size % BS);
 }
 
 // </File>
@@ -370,6 +370,7 @@ int DefragClass::calcInternalFrag(){
 
 			//update totalFrag and visited
 			currFile->updateInternalFrag();
+			cout<< currFile->getName() <<" "<<currFile->getInternalFrag()<<endl;
 			totalIntFrag += currFile->getInternalFrag();
 			visited.insert(currFile);
 		}
@@ -377,6 +378,26 @@ int DefragClass::calcInternalFrag(){
 
 	return totalIntFrag;
 }
+
+// void DefragClass::updateInternalFrag(){
+
+// 	int totalIntFrag = 0;
+// 	set<File*> visited;
+
+// 	for(int i = 0; i < rows; i++){
+// 		for(int j = 0; j < cols; j++){
+// 			File* currFile = BTF[{i,j}].second;
+// 			if(currFile == nullptr) continue;
+// 			if(visited.find(currFile) != visited.end()) continue;
+
+// 			//update totalFrag and visited
+// 			currFile->updateInternalFrag();
+// 			// cout<<currFile->getInternalFrag()<<endl;
+// 			// totalIntFrag += currFile->getInternalFrag();
+// 			visited.insert(currFile);
+// 		}
+// 	}
+// }
 
 // Function to calculate Manhattan distance
 int DefragClass::calculateDistance(pair<int, int> a, pair<int, int> b) {
