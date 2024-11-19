@@ -4,10 +4,9 @@
 #include "../include/GlobalVariables.h"
 #include "../include/Environment.h"
 
-
 BaseCommand::BaseCommand(std::string args) : command_name(), args(args) {}
 
-BaseCommand::BaseCommand(std::string command_name, std::string args) : command_name(command_name), args(args) { }
+BaseCommand::BaseCommand(std::string command_name, std::string args) : command_name(command_name), args(args) {}
 
 std::string BaseCommand::getCommandName()
 {
@@ -21,7 +20,7 @@ std::string BaseCommand::getArgs()
 
 PwdCommand::PwdCommand(std::string args) : BaseCommand(args) {}
 
-void PwdCommand::execute(FileSystem& fs)
+void PwdCommand::execute(FileSystem &fs)
 {
 	std::cout << fs.getWorkingDirectory().getAbsolutePath() << std::endl;
 }
@@ -31,11 +30,11 @@ std::string PwdCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-PwdCommand::PwdCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+PwdCommand::PwdCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 CdCommand::CdCommand(std::string args) : BaseCommand(args) {}
 
-void CdCommand::execute(FileSystem& fs)
+void CdCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -45,7 +44,7 @@ void CdCommand::execute(FileSystem& fs)
 		return;
 	}
 
-	Directory* directory = fs.getDirectoryFromPath(arguments[0]);
+	Directory *directory = fs.getDirectoryFromPath(arguments[0]);
 
 	if (!directory) // enters if returned directory is nullptr, meaning not found
 	{
@@ -61,21 +60,21 @@ std::string CdCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-CdCommand::CdCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+CdCommand::CdCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 LsCommand::LsCommand(std::string args) : BaseCommand(args) {}
 
-void LsCommand::execute(FileSystem& fs)
+void LsCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> words = StringTools::split(this->getArgs(), " ");
-	
+
 	if (words.size() != 1 && (words.size() == 2 && words[0] != "-s"))
 	{
 		std::cout << "Usage: ls [-s] <path>" << std::endl;
 		return;
 	}
 
-	Directory* dir = fs.getDirectoryFromPath(words.back());
+	Directory *dir = fs.getDirectoryFromPath(words.back());
 	if (words.back() == "" || words.back() == "-s")
 		dir = &fs.getWorkingDirectory();
 
@@ -96,9 +95,9 @@ void LsCommand::execute(FileSystem& fs)
 		dir->sortByName();
 	}
 
-	for (BaseFile* bf : dir->getChildren())
+	for (BaseFile *bf : dir->getChildren())
 	{
-		if (Directory* d = dynamic_cast<Directory*>(bf))
+		if (Directory *d = dynamic_cast<Directory *>(bf))
 			std::cout << "DIR" << '\t' << d->getName() << '\t' << d->getSize() << std::endl;
 		else
 			std::cout << "FILE" << '\t' << bf->getName() << '\t' << bf->getSize() << std::endl;
@@ -110,11 +109,11 @@ std::string LsCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-LsCommand::LsCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+LsCommand::LsCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 MkdirCommand::MkdirCommand(std::string args) : BaseCommand(args) {}
 
-void MkdirCommand::execute(FileSystem& fs)
+void MkdirCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -130,7 +129,7 @@ void MkdirCommand::execute(FileSystem& fs)
 		return;
 	}
 
-	Directory* cwd = &fs.getWorkingDirectory(); // push working directory
+	Directory *cwd = &fs.getWorkingDirectory(); // push working directory
 
 	if (arguments[0][0] == '/')
 		fs.setWorkingDirectory(&fs.getRootDirectory());
@@ -151,7 +150,8 @@ void MkdirCommand::execute(FileSystem& fs)
 			std::cout << "Invalid path" << std::endl;
 			return;
 		}
-		else break;
+		else
+			break;
 	}
 
 	for (size_t i = processed_names; i < names.size(); i++)
@@ -164,7 +164,7 @@ void MkdirCommand::execute(FileSystem& fs)
 		}
 		else if (names[i] != "")
 		{
-			Directory* dir = new Directory(names[i], &fs.getWorkingDirectory());
+			Directory *dir = new Directory(names[i], &fs.getWorkingDirectory());
 			fs.getWorkingDirectory().addFile(dir);
 			fs.setWorkingDirectory(dir);
 		}
@@ -178,11 +178,11 @@ std::string MkdirCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-MkdirCommand::MkdirCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+MkdirCommand::MkdirCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 MkfileCommand::MkfileCommand(std::string args) : BaseCommand(args) {}
 
-void MkfileCommand::execute(FileSystem& fs)
+void MkfileCommand::execute(FileSystem &fs)
 {
 	try
 	{
@@ -211,7 +211,7 @@ void MkfileCommand::execute(FileSystem& fs)
 			return;
 		}
 		std::string path = arguments[0].substr(0, arguments[0].length() - file_name.length());
-		Directory* dir = fs.getDirectoryFromPath(path) ? fs.getDirectoryFromPath(path) : &fs.getWorkingDirectory();
+		Directory *dir = fs.getDirectoryFromPath(path) ? fs.getDirectoryFromPath(path) : &fs.getWorkingDirectory();
 		if (!dir)
 		{
 			std::cout << "The system cannot find the path specified" << std::endl;
@@ -223,7 +223,7 @@ void MkfileCommand::execute(FileSystem& fs)
 			return;
 		}
 
-		File* new_file = new File(file_name, file_size);
+		File *new_file = new File(file_name, file_size);
 		dir->addFile(new_file);
 	}
 	catch (int e)
@@ -237,11 +237,11 @@ std::string MkfileCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-MkfileCommand::MkfileCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+MkfileCommand::MkfileCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 CpCommand::CpCommand(std::string args) : BaseCommand(args) {}
 
-void CpCommand::execute(FileSystem& fs)
+void CpCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -254,10 +254,10 @@ void CpCommand::execute(FileSystem& fs)
 	std::string src_name = StringTools::split(StringTools::trim(arguments[0]), "/").back();
 	std::string src_dir = StringTools::trim(arguments[0]).substr(0, arguments[0].length() - src_name.length());
 
-	Directory* src = fs.getDirectoryFromPath(src_dir);
+	Directory *src = fs.getDirectoryFromPath(src_dir);
 	if (StringTools::trim(src_dir) == "")
 		src = &fs.getWorkingDirectory();
-	Directory* dest = fs.getDirectoryFromPath(arguments[1]);
+	Directory *dest = fs.getDirectoryFromPath(arguments[1]);
 	if (StringTools::trim(arguments[1]) == "")
 		dest = &fs.getWorkingDirectory();
 
@@ -267,15 +267,15 @@ void CpCommand::execute(FileSystem& fs)
 		return;
 	}
 
-	BaseFile* bf = src->getChildByName(src_name);
-	if (Directory* d = dynamic_cast<Directory*>(bf))
+	BaseFile *bf = src->getChildByName(src_name);
+	if (Directory *d = dynamic_cast<Directory *>(bf))
 	{
-		Directory* new_d = new Directory(*d);
+		Directory *new_d = new Directory(*d);
 		dest->addFile(new_d);
 	}
-	else if (File* f = dynamic_cast<File*>(bf))
+	else if (File *f = dynamic_cast<File *>(bf))
 	{
-		File* new_f = new File(*f);
+		File *new_f = new File(*f);
 		dest->addFile(new_f);
 	}
 }
@@ -285,11 +285,11 @@ std::string CpCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-CpCommand::CpCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+CpCommand::CpCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 MvCommand::MvCommand(std::string args) : BaseCommand(args) {}
 
-void MvCommand::execute(FileSystem& fs)
+void MvCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -307,10 +307,10 @@ void MvCommand::execute(FileSystem& fs)
 	std::string src_name = StringTools::split(StringTools::trim(arguments[0]), "/").back();
 	std::string src_dir = StringTools::trim(arguments[0]).substr(0, arguments[0].length() - src_name.length());
 
-	Directory* src = fs.getDirectoryFromPath(src_dir);
+	Directory *src = fs.getDirectoryFromPath(src_dir);
 	if (StringTools::trim(src_dir) == "")
 		src = &fs.getWorkingDirectory();
-	Directory* dest = fs.getDirectoryFromPath(arguments[1]);
+	Directory *dest = fs.getDirectoryFromPath(arguments[1]);
 	if (StringTools::trim(arguments[1]) == "")
 		dest = &fs.getWorkingDirectory();
 
@@ -320,10 +320,10 @@ void MvCommand::execute(FileSystem& fs)
 		return;
 	}
 
-	BaseFile* bf = src->getChildByName(src_name);
-	if (Directory* d = dynamic_cast<Directory*>(bf))
+	BaseFile *bf = src->getChildByName(src_name);
+	if (Directory *d = dynamic_cast<Directory *>(bf))
 	{
-		Directory* check_cwd_or_parents = &fs.getWorkingDirectory();
+		Directory *check_cwd_or_parents = &fs.getWorkingDirectory();
 		while (check_cwd_or_parents->getParent() != NULL)
 		{
 			if (d == check_cwd_or_parents)
@@ -333,12 +333,12 @@ void MvCommand::execute(FileSystem& fs)
 			}
 			check_cwd_or_parents = check_cwd_or_parents->getParent();
 		}
-		Directory* new_d = new Directory(*d);
+		Directory *new_d = new Directory(*d);
 		dest->addFile(new_d);
 	}
-	else if (File* f = dynamic_cast<File*>(bf))
+	else if (File *f = dynamic_cast<File *>(bf))
 	{
-		File* new_f = new File(*f);
+		File *new_f = new File(*f);
 		dest->addFile(new_f);
 	}
 	src->removeFile(src_name);
@@ -349,11 +349,11 @@ std::string MvCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-MvCommand::MvCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+MvCommand::MvCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 RenameCommand::RenameCommand(std::string args) : BaseCommand(args) {}
 
-void RenameCommand::execute(FileSystem& fs)
+void RenameCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -366,7 +366,7 @@ void RenameCommand::execute(FileSystem& fs)
 	std::string src_name = StringTools::split(StringTools::trim(arguments[0]), "/").back();
 	std::string src_dir = StringTools::trim(arguments[0]).substr(0, arguments[0].length() - src_name.length());
 
-	Directory* src = fs.getDirectoryFromPath(src_dir);
+	Directory *src = fs.getDirectoryFromPath(src_dir);
 	if (!src || !src->childExists(src_name))
 	{
 		std::cout << "No such file or directory" << std::endl;
@@ -381,11 +381,11 @@ std::string RenameCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-RenameCommand::RenameCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+RenameCommand::RenameCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 RmCommand::RmCommand(std::string args) : BaseCommand(args) {}
 
-void RmCommand::execute(FileSystem& fs)
+void RmCommand::execute(FileSystem &fs)
 {
 	std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
 
@@ -394,7 +394,7 @@ void RmCommand::execute(FileSystem& fs)
 		std::cout << "Usage: rm <path>" << std::endl;
 		return;
 	}
-	
+
 	if (arguments[0] == "/")
 	{
 		std::cout << "Can't remove directory" << std::endl;
@@ -404,14 +404,14 @@ void RmCommand::execute(FileSystem& fs)
 	std::string src_name = StringTools::split(StringTools::trim(arguments[0]), "/").back();
 	std::string src_dir = StringTools::trim(arguments[0]).substr(0, arguments[0].length() - src_name.length());
 
-	Directory* src = fs.getDirectoryFromPath(src_dir);
+	Directory *src = fs.getDirectoryFromPath(src_dir);
 	if (!src || !src->childExists(src_name))
 	{
 		std::cout << "No such file or directory" << std::endl;
 		return;
 	}
 
-	BaseFile* bf = src->getChildByName(src_name);
+	BaseFile *bf = src->getChildByName(src_name);
 
 	if (bf == &fs.getRootDirectory() || bf == &fs.getWorkingDirectory())
 	{
@@ -427,11 +427,11 @@ std::string RmCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-RmCommand::RmCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+RmCommand::RmCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
-HistoryCommand::HistoryCommand(std::string args, const std::vector<BaseCommand*>& history) : BaseCommand(args), history(history) {}
+HistoryCommand::HistoryCommand(std::string args, const std::vector<BaseCommand *> &history) : BaseCommand(args), history(history) {}
 
-void HistoryCommand::execute(FileSystem& fs)
+void HistoryCommand::execute(FileSystem &fs)
 {
 	if (StringTools::trim(this->getArgs()) != "")
 	{
@@ -439,7 +439,7 @@ void HistoryCommand::execute(FileSystem& fs)
 	}
 
 	unsigned int counter = 0;
-	for (BaseCommand* base_command : this->history)
+	for (BaseCommand *base_command : this->history)
 	{
 		std::cout << counter << '\t' << base_command->toString() << std::endl;
 		++counter;
@@ -451,11 +451,11 @@ std::string HistoryCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-HistoryCommand::HistoryCommand(std::string command_name, std::string args, const std::vector<BaseCommand*>& history) : BaseCommand(command_name, args), history(history) {}
+HistoryCommand::HistoryCommand(std::string command_name, std::string args, const std::vector<BaseCommand *> &history) : BaseCommand(command_name, args), history(history) {}
 
 VerboseCommand::VerboseCommand(std::string args) : BaseCommand(args) {}
 
-void VerboseCommand::execute(FileSystem& fs)
+void VerboseCommand::execute(FileSystem &fs)
 {
 	std::string input = StringTools::trim(this->getArgs());
 	if (input == "0")
@@ -475,13 +475,13 @@ std::string VerboseCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-VerboseCommand::VerboseCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+VerboseCommand::VerboseCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
 ErrorCommand::ErrorCommand(std::string args) : BaseCommand(args) {}
 
-ErrorCommand::ErrorCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+ErrorCommand::ErrorCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
-void ErrorCommand::execute(FileSystem& fs)
+void ErrorCommand::execute(FileSystem &fs)
 {
 	std::cout << this->getCommandName() << ": Unknown command" << std::endl;
 }
@@ -491,9 +491,9 @@ std::string ErrorCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-ExecCommand::ExecCommand(std::string args, const std::vector<BaseCommand*>& history) : BaseCommand(args), history(history) {}
+ExecCommand::ExecCommand(std::string args, const std::vector<BaseCommand *> &history) : BaseCommand(args), history(history) {}
 
-void ExecCommand::execute(FileSystem& fs)
+void ExecCommand::execute(FileSystem &fs)
 {
 	try
 	{
@@ -517,23 +517,24 @@ std::string ExecCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-ExecCommand::ExecCommand(std::string command_name, std::string args, const std::vector<BaseCommand *> & history) : BaseCommand(args), history(history) {}
+ExecCommand::ExecCommand(std::string command_name, std::string args, const std::vector<BaseCommand *> &history) : BaseCommand(args), history(history) {}
 
-DefragCommand::DefragCommand(std::string args) : BaseCommand( args) {}
+DefragCommand::DefragCommand(std::string args) : BaseCommand(args) {}
 
-void DefragCommand::execute(FileSystem& fs)
+void DefragCommand::execute(FileSystem &fs)
 {
 	try
 	{
 		// cout<<"Entered\n";
-		
+
 		vector<std::string> tokens = StringTools::split(this->getArgs(), " ");
 		// cout<<"No of args: "<<tokens.size()<<endl;
 		// for(auto i: tokens)
 		// {
-		// 	cout<<i<<" "; 
+		// 	cout<<i<<" ";
 		// }
-		if(!(tokens.size() == 1 || tokens.size() == 2))
+		cout << tokens.size() << "\n";
+		if (!(tokens.size() == 1 || tokens.size() == 2))
 		{
 			std::cerr << "Invalid No of Args.... \n";
 			return;
@@ -541,17 +542,15 @@ void DefragCommand::execute(FileSystem& fs)
 
 		int rows = -1;
 		int cols = -1;
-		if(tokens.size() == 2)
+		if (tokens.size() == 2)
 		{
 			rows = stoi(tokens[0]);
 			cols = stoi(tokens[1]);
 		}
 		// cout<<"Rows: "<<rows<<" Cols: "<<cols<<endl;
-		
 
 		fs.defragmenting(fs, rows, cols);
-		
-		
+
 		// cout<<"\n";
 	}
 	catch (int e)
@@ -565,38 +564,91 @@ std::string DefragCommand::toString()
 	return this->getCommandName() + this->getArgs();
 }
 
-DefragCommand::DefragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+DefragCommand::DefragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
-slidingfragCommand::slidingfragCommand(std::string args) : BaseCommand( args) {}
+FDefragCommand::FDefragCommand(std::string args) : BaseCommand(args) {}
 
+void FDefragCommand::execute(FileSystem &fs)
+{
+	try
+	{
+		std::vector<std::string> arguments = StringTools::split(this->getArgs(), " ");
+
+		if (arguments.size() != 1 || (arguments.size() > 0 && arguments[0] == ""))
+		{
+			std::cout << "Usage: rm <path>" << std::endl;
+			return;
+		}
+
+		if (arguments[0] == "/")
+		{
+			std::cout << "Can't fetch directory" << std::endl;
+			return;
+		}
+
+		std::string src_name = StringTools::split(StringTools::trim(arguments[0]), "/").back();
+		std::string src_dir = StringTools::trim(arguments[0]).substr(0, arguments[0].length() - src_name.length());
+
+		Directory *src = fs.getDirectoryFromPath(src_dir);
+		if (!src || !src->childExists(src_name))
+		{
+			std::cout << "No such file or directory" << std::endl;
+			return;
+		}
+
+		BaseFile *bf = src->getChildByName(src_name);
+
+		if (bf == &fs.getRootDirectory() || bf == &fs.getWorkingDirectory())
+		{
+			std::cout << "Can't remove directory" << std::endl;
+			return;
+		}
+		File *fle = dynamic_cast<File *>(bf);
+
+		fs.fleDefrag(fs, fle);
+	}
+	catch (int e)
+	{
+		std::cout << "Command not found" << std::endl;
+	}
+}
+
+std::string FDefragCommand::toString()
+{
+	return this->getCommandName() + this->getArgs();
+}
+
+FDefragCommand::FDefragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
+
+slidingfragCommand::slidingfragCommand(std::string args) : BaseCommand(args) {}
 
 void slidingfragCommand::execute(FileSystem &fs)
 {
-    try
-    {
-        vector<std::string> tokens = StringTools::split(this->getArgs(), " ");
+	try
+	{
+		vector<std::string> tokens = StringTools::split(this->getArgs(), " ");
 
-        if(tokens.size()!=1)
+		if (tokens.size() != 1)
 		{
 			std::cerr << "Invalid No of Args.... \n";
 			return;
 		}
-        fs.slidingdefragmenting(fs);
-    }
-    catch (const std::exception &e)
-    {
-        std::cout << "Error: Invalid command or arguments. " << e.what() << std::endl;
-    }
+		fs.slidingdefragmenting(fs);
+	}
+	catch (const std::exception &e)
+	{
+		std::cout << "Error: Invalid command or arguments. " << e.what() << std::endl;
+	}
 }
 
 std::string slidingfragCommand::toString()
 {
-    return this->getCommandName() + " " + this->getArgs();
+	return this->getCommandName() + " " + this->getArgs();
 }
 
-slidingfragCommand::slidingfragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) { }
+slidingfragCommand::slidingfragCommand(std::string command_name, std::string args) : BaseCommand(command_name, args) {}
 
-CommandType CommandTools::stringToCommand(const std::string& input)
+CommandType CommandTools::stringToCommand(const std::string &input)
 {
 	if (input == "")
 		return CommandType::EmptyCommandType;
@@ -627,7 +679,9 @@ CommandType CommandTools::stringToCommand(const std::string& input)
 	if (input == "defrag")
 		return CommandType::DefragCommandType;
 	if (input == "sfrag")
-	    return CommandType::slidingfragCommandType;
+		return CommandType::slidingfragCommandType;
+	if (input == "fdefrag")
+		return CommandType::FDefragCommandType;
 
 	return CommandType::UnknownCommandType;
 }

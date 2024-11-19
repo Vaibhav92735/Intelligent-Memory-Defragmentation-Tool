@@ -21,7 +21,8 @@ enum CommandType
 	VerboseCommandType,
 	ExecCommandType,
 	DefragCommandType,
-	slidingfragCommandType
+	slidingfragCommandType,
+	FDefragCommandType
 };
 
 class BaseCommand {
@@ -195,6 +196,17 @@ public:
 
 	// my addition
 	DefragCommand(std::string command_name, std::string args);
+};
+
+class FDefragCommand : public BaseCommand {
+
+public:
+	FDefragCommand(std::string args);
+	void execute(FileSystem & fs);
+	std::string toString();
+
+	// my addition
+	FDefragCommand(std::string command_name, std::string args);
 };
 
 class slidingfragCommand : public BaseCommand

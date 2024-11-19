@@ -2,7 +2,7 @@
 #include "../include/Config.h"
 #include <algorithm>
 #include <iostream>
-#include <pthread.h> 
+#include <pthread.h>
 #include "../include/GlobalVariables.h"
 #include <thread>
 #include <chrono>
@@ -14,7 +14,7 @@ using namespace chrono;
 // global variables
 std::map<std::pair<int, int>, std::pair<int, File *>> BTF;
 std::map<std::pair<int, int>, std::pair<int, std::string>> BT;
-std::queue<std::pair<File*, std::vector<std::pair<std::pair<int, int>, int>>>> overflowQueue;
+std::queue<std::pair<File *, std::vector<std::pair<std::pair<int, int>, int>>>> overflowQueue;
 int BS;
 int rows, cols;
 int rowFrag, colFrag;
@@ -50,11 +50,13 @@ int File::getSize()
 	return this->size;
 }
 
-int File::getInternalFrag(){
+int File::getInternalFrag()
+{
 	return this->internalFrag;
 }
 
-void File::updateInternalFrag(){
+void File::updateInternalFrag()
+{
 	this->internalFrag = BS-(this->size % BS);
 }
 
@@ -233,16 +235,16 @@ void Directory::removeBlocks(BaseFile *file)
 		i.second = -1;
 	}
 
-// 	for (auto &i : f->blocks)
-// 	{
-// 		cout << "Block index: " << i.first << " " << i.second << "\n";
-// 		cout << BT[{i.first, i.second}].first << " " << BT[{i.first, i.second}].second << "\n";
-// 	}
+	// 	for (auto &i : f->blocks)
+	// 	{
+	// 		cout << "Block index: " << i.first << " " << i.second << "\n";
+	// 		cout << BT[{i.first, i.second}].first << " " << BT[{i.first, i.second}].second << "\n";
+	// 	}
 }
 
 void DefragClass::PrintHDD()
 {
-    printf("In use");
+	// printf("In use");
 	for (int i = 0; i < rows; i++)
 	{
 		if (i % rowFrag == 0)
@@ -257,7 +259,6 @@ void DefragClass::PrintHDD()
 			if (j % colFrag == 0)
 				cout << " Y ";
 
-
 			cout << " " << BT[{i, j}].second << " " << BT[{i, j}].first << " ";
 
 			for (int k = 0; k < (12 - (BT[{i, j}].second).size() - (to_string(BT[{i, j}].first)).size()); k++)
@@ -267,11 +268,142 @@ void DefragClass::PrintHDD()
 	}
 }
 
+void DefragClass::fileDefrag(File *file)
+{
+	// cout << "Entered inside fileDefrag with file name: " << file->getName() << endl;
+	cout << ".......................Before Defragmentation......................" << endl;
+	evaluateFragmentation();
+
+	cout << ".......................starting file defragmntations...........................\n";
+	int xc = 0, yc = 0;
+
+	for (auto b : file->blocks)
+	{
+		xc += b.first;
+		yc += b.second;
+	}
+
+	xc = xc / file->blocks.size();
+	yc = yc / file->blocks.size();
+
+	int dirx[4] = {0, 0, 1, -1};
+	int diry[4] = {1, -1, 0, 0};
+	int corx[4] = {1, 1, -1, -1};
+	int cory[4] = {-1, 1, -1, 1};
+
+	int sx = xc - 1, sy = yc - 1;
+
+	int maxi = 0;
+
+	cout << "starting file defragmentation around geometrical center : " << xc << " " << yc << "\n";
+
+	PrintHDD();
+
+	for (auto i : file->blocks)
+	{
+		BTF[make_pair(i.first, i.second)].first = -1;
+		BTF[make_pair(i.first, i.second)].second = NULL;
+
+		maxi = max(maxi, max(abs(i.first - xc), abs(i.second - yc)));
+
+		BT[make_pair(i.first, i.second)].first = -1;
+		BT[make_pair(i.first, i.second)].second = "NULL";
+	}
+
+	vector<pair<int, int>> freeSp;
+
+	if (BTF[make_pair(xc, yc)].second == NULL)
+	{
+		freeSp.push_back({xc, yc});
+	}
+
+	// cout << "Checking: \n";
+
+	for (int i = 1; i <= maxi; i++)
+	{
+
+
+			for (int k = 0; k < (2 * i + 1); k++)
+			{
+				if (sx < rows && sx >= 0 && sy + k < cols && sy + k >= 0 && BTF[make_pair(sx, sy + k)].second == NULL)
+				{
+					freeSp.push_back({sx, sy + k});
+				}
+			}
+			sy += 2 * i;
+			for (int k = 1; k < (2 * i + 1); k++)
+			{
+				if (sx + k < rows && sx + k >= 0 && sy < cols && sy >= 0 && BTF[make_pair(sx + k, sy)].second == NULL)
+				{
+					freeSp.push_back({sx + k, sy});
+				}
+			}
+
+			sx += 2 * i;
+
+			for (int k = 1; k < (2 * i + 1); k++)
+			{
+				if (sx < rows && sx >= 0 && sy - k < cols && sy - k >= 0 && BTF[make_pair(sx, sy - k)].second == NULL)
+				{
+					freeSp.push_back({sx, sy - k});
+				}
+			}
+
+			sy -= 2 * i;
+			for (int k = 1; k < (2 * i); k++)
+			{
+				if (sx - k < rows && sx - k >= 0 && sy < cols && sy >= 0 && BTF[make_pair(sx - k, sy)].second == NULL)
+				{
+					freeSp.push_back({sx - k, sy});
+				}
+			}
+
+			sx -= 2 * i;
+	
+
+		if (freeSp.size() >= file->blocks.size())
+			break;
+
+		sx--;
+		sy--;
+	}
+
+	// for (auto i : freeSp)
+	// {
+	// 	cout << i.first << " " << i.second << endl;
+	// }
+
+	int cnt = 0;
+
+
+	for (auto i : freeSp)
+	{
+
+		BTF[{i.first, i.second}].first = cnt;
+		BTF[{i.first, i.second}].second = file;
+
+		BT[{i.first, i.second}].first = cnt;
+		BT[{i.first, i.second}].second = file->getName();
+
+		file->blocks[cnt] = {i.first, i.second};
+
+		cnt++;
+		if (cnt >= file->blocks.size())
+			break;
+	}
+
+	cout << ".......................After Defragmentation......................" << endl;
+	evaluateFragmentation();
+
+	cout << "...............virtul HDD view...............\n";
+	PrintHDD();
+
+}
+
 void DefragClass::fullDefragmentation(int i, int j)
 {
 
 	map<File *, vector<pair<pair<int, int>, int>>> fileFragments;
-
 
 	for (int row = i; row < i + rowFrag; row++)
 	{
@@ -291,11 +423,32 @@ void DefragClass::fullDefragmentation(int i, int j)
 		{
 			int cr = i + curr / rowFrag, cc = j + curr % colFrag;
 
-			f->blocks[it] = {cr, cc};
 			BTF[{cr, cc}] = {file.second[it].second, f};
 			BT[{cr, cc}] = {file.second[it].second, f->getName()};
 
 			curr++;
+		}
+	}
+
+	for (auto file : fileFragments)
+	{
+		int curr = 0;
+		map<int  , pair<int , int>> frag;
+		for (int r = 0; r < rows; r++)
+		{
+			for (int c = 0; c < cols; c++)
+			{
+				if ( file.first == BTF[{r, c}].second )
+				{
+					frag[BTF[{r, c}].first] = {r,c};					
+				}
+			}
+		}
+
+		curr = 0;
+		for(auto f : frag)
+		{
+			file.first->blocks[curr++] = f.second;
 		}
 	}
 
@@ -314,7 +467,6 @@ void DefragClass::fullDefragmentation(int i, int j)
 	// }
 
 	// cout << "--------------this segment defragmented----------------\n";
-
 }
 
 void DefragClass::defragmentation(int r, int c)
@@ -322,7 +474,7 @@ void DefragClass::defragmentation(int r, int c)
 	cout << "...............virtul HDD view...............\n";
 	PrintHDD();
 
-	cout<< ".......................Before Defragmentation......................"<<endl;
+	cout << ".......................Before Defragmentation......................" << endl;
 	evaluateFragmentation();
 	if (r != -1)
 	{
@@ -347,102 +499,107 @@ void DefragClass::defragmentation(int r, int c)
 		}
 	}
 
-	cout<< ".......................After Defragmentation......................"<<endl;
+	cout << ".......................After Defragmentation......................" << endl;
 	evaluateFragmentation();
 
 	int totalInternalFrag = calcInternalFrag();
-	cout<< "Total Internal Fragmentation is (in Bytes): "<< totalInternalFrag<<endl;
+	cout << "Total Internal Fragmentation is (in Bytes): " << totalInternalFrag << endl;
 
 	cout << "...............virtul HDD view...............\n";
 	PrintHDD();
 }
 
-int DefragClass::calcInternalFrag(){
+int DefragClass::calcInternalFrag()
+{
 
 	int totalIntFrag = 0;
-	set<File*> visited;
+	set<File *> visited;
 
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			File* currFile = BTF[{i,j}].second;
-			if(currFile == nullptr) continue;
-			if(visited.find(currFile) != visited.end()) continue;
+	cout<<"File Name | Internal Fragmentation"<<endl;
+	cout<<"-----------------------------------"<<endl;
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			File *currFile = BTF[{i, j}].second;
+			if (currFile == nullptr)
+				continue;
+			if (visited.find(currFile) != visited.end())
+				continue;
 
-			//update totalFrag and visited
+			// update totalFrag and visited
 			currFile->updateInternalFrag();
-			cout<< currFile->getName() <<" "<<currFile->getInternalFrag()<<endl;
+			cout<< currFile->getName() <<"           | "<<currFile->getInternalFrag()<<endl;
 			totalIntFrag += currFile->getInternalFrag();
 			visited.insert(currFile);
 		}
 	}
 
+	cout<<"-----------------------------------"<<endl;
+
 	return totalIntFrag;
 }
 
-// void DefragClass::updateInternalFrag(){
-
-// 	int totalIntFrag = 0;
-// 	set<File*> visited;
-
-// 	for(int i = 0; i < rows; i++){
-// 		for(int j = 0; j < cols; j++){
-// 			File* currFile = BTF[{i,j}].second;
-// 			if(currFile == nullptr) continue;
-// 			if(visited.find(currFile) != visited.end()) continue;
-
-// 			//update totalFrag and visited
-// 			currFile->updateInternalFrag();
-// 			// cout<<currFile->getInternalFrag()<<endl;
-// 			// totalIntFrag += currFile->getInternalFrag();
-// 			visited.insert(currFile);
-// 		}
-// 	}
-// }
-
 // Function to calculate Manhattan distance
-int DefragClass::calculateDistance(pair<int, int> a, pair<int, int> b) {
-    return abs(a.first - b.first) + abs(a.second - b.second);
+int DefragClass::calculateDistance(pair<int, int> a, pair<int, int> b)
+{
+	return abs(a.first - b.first) + abs(a.second - b.second);
 }
 
 // Function to compute frag size
-int DefragClass::calculateFragSize(const vector<pair<int, int>> &blocks) {
-    int fragSize = 1; // At least one contiguous segment
-    for (size_t i = 1; i < blocks.size(); i++) {
-        // Check if blocks are adjacent (row-major order)
-        if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1) {
-            fragSize++;
-        }
-    }
-    return (blocks.size()/fragSize)*BS;
+int DefragClass::calculateFragSize(const vector<pair<int, int>> &blocks)
+{
+	int fragSize = 1; // At least one contiguous segment
+	for (size_t i = 1; i < blocks.size(); i++)
+	{
+		// Check if blocks are adjacent (row-major order)
+		if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1)
+		{
+			fragSize++;
+		}
+	}
+
+	// for(auto i : blocks)cout << i.first << " " << i.second << "\n";
+
+	// cout << blocks.size() << " " << fragSize << " " << BS << "\n";
+ 	return (blocks.size() / fragSize) * BS;
 }
 
 // Function to compute frag distance
-int DefragClass::calculateFragDistance(const vector<pair<int, int>> &blocks) {
-    int fragDistance = 0;
+int DefragClass::calculateFragDistance(const vector<pair<int, int>> &blocks)
+{
+	int fragDistance = 0;
 	int fragSize = 1;
-    for (size_t i = 1; i < blocks.size(); i++) {
-		if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1) {
+	for (size_t i = 1; i < blocks.size(); i++)
+	{
+		if (blocks[i].first != blocks[i - 1].first || blocks[i].second != blocks[i - 1].second + 1)
+		{
 			fragSize++;
-            fragDistance += calculateDistance(blocks[i - 1], blocks[i]);
-        }
-    }
-    return fragDistance*BS/fragSize;
+			fragDistance += calculateDistance(blocks[i - 1], blocks[i]);
+		}
+	}
+	return fragDistance * BS / fragSize;
 }
 
 // Main function to evaluate fragmentation metrics
-void DefragClass::evaluateFragmentation() {
-    cout << "File Name | Frag Size | Frag Distance\n";
-    cout << "-----------------------------------\n";
+void DefragClass::evaluateFragmentation()
+{
+	cout << "File Name | Frag Size | Frag Distance\n";
+	cout << "-----------------------------------\n";
 
-	set<File*> visited;
+	set<File *> visited;
 
-	for(int i = 0; i < rows; i++){
-		for(int j = 0; j < cols; j++){
-			File* currFile = BTF[{i,j}].second;
-			if(currFile == nullptr) continue;
-			if(visited.find(currFile) != visited.end()) continue;
+	for (int i = 0; i < rows; i++)
+	{
+		for (int j = 0; j < cols; j++)
+		{
+			File *currFile = BTF[{i, j}].second;
+			if (currFile == nullptr)
+				continue;
+			if (visited.find(currFile) != visited.end())
+				continue;
 
-			//impelement the analysis metrics
+			// impelement the analysis metrics
 			string fileName = currFile->getName();
 			auto blocks = currFile->blocks;
 
@@ -457,86 +614,85 @@ void DefragClass::evaluateFragmentation() {
 		}
 	}
 
-    cout << "-----------------------------------\n";
+	cout << "-----------------------------------\n";
 }
 
 void DefragClass::slidingDefragmentation()
 {
 	auto start = high_resolution_clock::now();
-    int currRow = 0, currCol = 0; // Starting position for compact placement
+	int currRow = 0, currCol = 0; // Starting position for compact placement
 
-    // Traverse the grid to compact blocks
-    for (int row = 0; row < rows; row++)
-    {
-        for (int col = 0; col < cols; col++)
-        {
-            auto &block = BTF[{row, col}];
-            File *f = block.second;
-            if (f != NULL) // Check if the current block is in use
-            {
-                int blockValue = block.first;
+	// Traverse the grid to compact blocks
+	for (int row = 0; row < rows; row++)
+	{
+		for (int col = 0; col < cols; col++)
+		{
+			auto &block = BTF[{row, col}];
+			File *f = block.second;
+			if (f != NULL) // Check if the current block is in use
+			{
+				int blockValue = block.first;
 
-                // If it's not at the current compacted position, move it
-                if (row != currRow || col != currCol)
-                {
-                    f->blocks.push_back({currRow, currCol}); // Add the new block to the file's block list
-                    BTF[{currRow, currCol}] = {blockValue, f}; // Update the block table with the new position
-                    BT[{currRow, currCol}] = {blockValue, f->getName()}; // Update the block name table
+				// If it's not at the current compacted position, move it
+				if (row != currRow || col != currCol)
+				{
+					f->blocks.push_back({currRow, currCol});			 // Add the new block to the file's block list
+					BTF[{currRow, currCol}] = {blockValue, f};			 // Update the block table with the new position
+					BT[{currRow, currCol}] = {blockValue, f->getName()}; // Update the block name table
 
-                    // Mark the old position as free
-                    BTF[{row, col}] = {-1, NULL};
-                    BT[{row, col}] = {-1, "NULL"};
-                }
+					// Mark the old position as free
+					BTF[{row, col}] = {-1, NULL};
+					BT[{row, col}] = {-1, "NULL"};
+				}
 
-                // Move to the next column in the current row
-                currCol++;
+				// Move to the next column in the current row
+				currCol++;
 
-                // If we've reached the end of the row, move to the next row and reset the column
-                if (currCol >= cols)
-                {
-                    currCol = 0;
-                    currRow++;
-                }
-            }
-        }
-    }
+				// If we've reached the end of the row, move to the next row and reset the column
+				if (currCol >= cols)
+				{
+					currCol = 0;
+					currRow++;
+				}
+			}
+		}
+	}
 
-    // Mark all remaining blocks as free after compacting in-use blocks
-    for (int row = currRow; row < rows; row++)
-    {
-        for (int col = (row == currRow ? currCol : 0); col < cols; col++)
-        {
-            BTF[{row, col}] = {-1, NULL};
-            BT[{row, col}] = {-1, "NULL"};
-        }
-    }
-    auto end = high_resolution_clock::now();
-    
-    // Calculate duration
-    auto duration = duration_cast<nanoseconds>(end - start);
-    cout << "Defragmentation completed in " << duration.count() << " nanoseconds.\n";
+	// Mark all remaining blocks as free after compacting in-use blocks
+	for (int row = currRow; row < rows; row++)
+	{
+		for (int col = (row == currRow ? currCol : 0); col < cols; col++)
+		{
+			BTF[{row, col}] = {-1, NULL};
+			BT[{row, col}] = {-1, "NULL"};
+		}
+	}
+	auto end = high_resolution_clock::now();
 
-	cout<< ".......................After Defragmentation......................"<<endl;
+	// Calculate duration
+	auto duration = duration_cast<nanoseconds>(end - start);
+	cout << "Defragmentation completed in " << duration.count() << " nanoseconds.\n";
+
+	cout << ".......................After Defragmentation......................" << endl;
 	evaluateFragmentation();
 
 	int totalInternalFrag = calcInternalFrag();
-	cout<< "Total Internal Fragmentation is (in Bytes): "<< totalInternalFrag<<endl;
+	cout << "Total Internal Fragmentation is (in Bytes): " << totalInternalFrag << endl;
 
-    cout << "Defragmentation completed using 1x(cols) sliding window.\n";
-    PrintHDD(); // Optionally, print the final disk state
+	cout << "Defragmentation completed using 1x(cols) sliding window.\n";
+	PrintHDD(); // Optionally, print the final disk state
 }
-
 
 void Directory::recursivedel(BaseFile *file)
 {
 	if (File *fle = dynamic_cast<File *>(file))
 	{
-			removeBlocks(file);
-			return;
+		removeBlocks(file);
+		return;
 	}
-		
+
 	Directory *dir = dynamic_cast<Directory *>(file);
-	for(int i = dir->children.size() - 1; i >= 0; i--)
+	for (int i = dir->children.size() - 1; i >= 0; i--)
 	{
 		recursivedel(dir->children[i]);
 	}
@@ -548,7 +704,7 @@ void Directory::removeFile(std::string name)
 	{
 		if (this->children[i]->getName().compare(name) == 0)
 		{
-			
+
 			recursivedel(this->children[i]);
 
 			this->children.erase(this->children.begin() + i);

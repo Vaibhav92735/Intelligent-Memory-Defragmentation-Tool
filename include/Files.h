@@ -42,9 +42,9 @@ public:
 	void slidingDefragmentation();
 	void defragmentation(int r, int c);
 	void fullDefragmentation(int i, int j);
+	void fileDefrag(File *file);
 
 	void evaluateFragmentation();
-	// void updateAllInternalFrag();
 	int calcInternalFrag();
 
 	// helper functions for analysis

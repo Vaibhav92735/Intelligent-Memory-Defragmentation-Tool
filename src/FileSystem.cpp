@@ -26,6 +26,11 @@ void FileSystem::defragmenting(FileSystem &fs_src, int rows, int cols)
 	defragObj.defragmentation(rows, cols);
 }
 
+void FileSystem::fleDefrag(FileSystem &fs_src, File* file)
+{	
+	defragObj.fileDefrag(file);
+}
+
 
 void FileSystem::slidingdefragmenting(FileSystem &fs_src )
 {	
