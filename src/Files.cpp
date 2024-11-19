@@ -419,45 +419,62 @@ void DefragClass::fullDefragmentation(int i, int j)
 	{
 
 		File *f = file.first;
+		cout <<  f->getName() << "\n" ; 
 		for (int it = 0; it < file.second.size(); it++)
 		{
-			int cr = i + curr / rowFrag, cc = j + curr % colFrag;
+			int cr = i + curr / colFrag , cc = j + curr % colFrag;
 
 			BTF[{cr, cc}] = {file.second[it].second, f};
 			BT[{cr, cc}] = {file.second[it].second, f->getName()};
 
+			// cout << curr << " " << cr << " " << cc << "\n" ;
 			curr++;
+			
+			// PrintHDD();
 		}
 	}
 
+
+	// cout << curr <<"\n" ;
+	// PrintHDD();
+
+	for (; curr < rowFrag * colFrag; curr++)
+	{
+		int cr = i + curr / colFrag, cc = j + curr % colFrag;
+
+		// cout << i << " " << j << " " << cr << " " << cc << "\n" ;
+
+		BTF[{cr, cc}] = {-1, NULL};
+		BT[{cr, cc}] = {-1, "NULL"};
+	}
+
+		// PrintHDD();
+
+
 	for (auto file : fileFragments)
 	{
-		int curr = 0;
-		map<int  , pair<int , int>> frag;
+		int cnt = 0;
+		map<int, pair<int, int>> frag;
 		for (int r = 0; r < rows; r++)
 		{
 			for (int c = 0; c < cols; c++)
 			{
-				if ( file.first == BTF[{r, c}].second )
+				if (file.first == BTF[{r, c}].second)
 				{
-					frag[BTF[{r, c}].first] = {r,c};					
+					frag[BTF[{r, c}].first] = {r, c};
 				}
 			}
 		}
 
-		curr = 0;
-		for(auto f : frag)
+		cnt = 0;
+		for (auto f : frag)
 		{
-			file.first->blocks[curr++] = f.second;
+			file.first->blocks[cnt++] = f.second;
 		}
 	}
 
-	for (; curr < rowFrag * colFrag; curr++)
-	{
-		int cr = i + curr / rowFrag, cc = j + curr % colFrag;
-		BTF[{cr, cc}] = {-1, NULL};
-		BT[{cr, cc}] = {-1, "NULL"};
-	}
+	
+
 
 	// for (int curr = 0; curr < rowFrag * colFrag; curr++)
 	// {
@@ -500,13 +517,18 @@ void DefragClass::defragmentation(int r, int c)
 	}
 
 	cout << ".......................After Defragmentation......................" << endl;
+
+
+	cout << "...............virtul HDD view...............\n";
+	PrintHDD();
+
 	evaluateFragmentation();
+
+
 
 	int totalInternalFrag = calcInternalFrag();
 	cout << "Total Internal Fragmentation is (in Bytes): " << totalInternalFrag << endl;
 
-	cout << "...............virtul HDD view...............\n";
-	PrintHDD();
 }
 
 int DefragClass::calcInternalFrag()
